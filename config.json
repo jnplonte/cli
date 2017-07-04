@@ -2,35 +2,5 @@
 	"dbName": "iman_bankaccount",
 	"dbUser": "root",
 	"dbPassword": "johnpaul",
-	"dbServer": "localhost",
-
-	"currencyList":[
-		"PHP",
-		"HKD",
-		"USD"
-	],
-
-	"productList":[
-		{"name":"one product",
-		 "price":{
-		 	"PHP": "100",
-		 	"HKD": "10",
-		 	"USD": "1"
-		 }
-		},
-		{"name":"two product",
-		 "price":{
-		 	"PHP": "200",
-		 	"HKD": "20",
-		 	"USD": "2"
-		 }
-		},
-		{"name":"three product",
-		 "price":{
-		 	"PHP": "300",
-		 	"HKD": "30",
-		 	"USD": "3"
-		 }
-		}
-	]
+	"dbServer": "localhost"
 }

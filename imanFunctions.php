@@ -1,5 +1,5 @@
 <?php
-namespace Cilex\Command;
+namespace Iman\Command;
 
 class imanFunctions
 {
@@ -7,8 +7,7 @@ class imanFunctions
 
     private $conn;
 
-    public function __construct()
-    {
+    function __construct(){
         $this->app = new \Cilex\Application('Cilex');
         $this->app->register(new \Cilex\Provider\ConfigServiceProvider(), array('config.path' => 'config.json'));
     }
@@ -21,207 +20,193 @@ class imanFunctions
         $this->_DBConnect();
 
         if (!$this->conn) {
-            return false;   
-        } 
+            return false;
+        }
 
-        $sql1 = "INSERT INTO user (name) VALUES ('".$name."')"; 
+        $sqlInsertUser = "INSERT INTO user (name) VALUES ('".$name."')";
+        $returnValue = true;
 
-        if (mysqli_query($this->conn, $sql1)) {
-            $pVal = true;
+        if (mysqli_query($this->conn, $sqlInsertUser)) {
             $last_id = mysqli_insert_id($this->conn);
-            $sql2 = "INSERT INTO user_balance (user_id) VALUES (".$last_id.")";
-            if (mysqli_query($this->conn, $sql2)) {
-                $pVal = true;
-            }else{
-                $pVal = false;
+            $sqlInsertBalance = "INSERT INTO user_balance (user_id) VALUES (".$last_id.")";
+            if (!mysqli_query($this->conn, $sqlInsertBalance)) {
+              $returnValue = false;
             }
         } else {
-            $pVal = false;
+            $returnValue = false;
         }
 
         mysqli_close($this->conn);
 
-        return $pVal;
+        return $returnValue;
     }
 
-    
     public function _checkUser($name=null){
         $this->_DBConnect();
 
         if (!$this->conn) {
-            return false;   
-        } 
+            return false;
+        }
 
-        $sql = "SELECT id, name FROM user where name like '%".$name."%'";
-        $result = mysqli_query($this->conn, $sql);
+        $sqlSelect = "SELECT id, name FROM user where name = '".$name."'";
+        $result = mysqli_query($this->conn, $sqlSelect);
 
         if (mysqli_num_rows($result) > 0) {
             while($row = mysqli_fetch_assoc($result)) {
-                $pVal[] = array('id' => $row["id"], 'name' => $row["name"]);
+                $returnValue[] = array('id' => $row["id"], 'name' => $row["name"]);
             }
         } else {
-            $pVal = false;
+            $returnValue = false;
         }
 
         mysqli_close($this->conn);
 
-        return $pVal;
+        return $returnValue;
     }
 
     public function _deleteUser($id=null){
         $this->_DBConnect();
 
         if (!$this->conn) {
-            return false;   
-        } 
+            return false;
+        }
 
-        $sql1 = "DELETE FROM user WHERE id=".$id;
-        if (mysqli_query($this->conn, $sql1)) {
-            $pVal = true;
-            $sql2 = "DELETE FROM user_balance WHERE user_id = '".$id."'";
-            if (mysqli_query($this->conn, $sql2)) {
-                $pVal = true;
-            }else{
-                $pVal = false;
+        $sqlDelete = "DELETE FROM user WHERE id=".$id;
+        $returnValue = true;
+
+        if (mysqli_query($this->conn, $sqlDelete)) {
+            $sqlDeleteBalance = "DELETE FROM user_balance WHERE user_id = '".$id."'";
+            if (!mysqli_query($this->conn, $sqlDeleteBalance)) {
+                $returnValue = false;
             }
         } else {
-            $pVal = false;
+            $returnValue = false;
         }
 
         mysqli_close($this->conn);
 
-        return $pVal;
+        return $returnValue;
     }
 
     public function _displayBalance($id=null){
         $this->_DBConnect();
 
         if (!$this->conn) {
-            return "0.00";   
-        } 
+            return "0.00";
+        }
 
-        $sql = "SELECT balance FROM user_balance where user_id = '".$id."'";
-        $result = mysqli_query($this->conn, $sql);
+        $sqlSelect = "SELECT balance FROM user_balance where user_id = '".$id."'";
+        $result = mysqli_query($this->conn, $sqlSelect);
 
         if (mysqli_num_rows($result) > 0) {
             while($row = mysqli_fetch_assoc($result)) {
-                $pVal = number_format($row["balance"], 2, '.', ',');
+                $returnValue = number_format($row["balance"], 2, '.', ',');
             }
         } else {
-            $pVal = "0.00";
+            $returnValue = "0.00";
         }
 
         mysqli_close($this->conn);
 
-        return $pVal;
+        return $returnValue;
     }
 
     public function _addBalance($id=null, $amount=null){
         $this->_DBConnect();
 
         if (!$this->conn) {
-            return "0.00";   
-        } 
+            return "0.00";
+        }
 
-        $sql1 = "SELECT balance FROM user_balance where user_id = '".$id."'";
-        $result = mysqli_query($this->conn, $sql1);
+        $sqlSelect = "SELECT balance FROM user_balance where user_id = '".$id."'";
+        $result = mysqli_query($this->conn, $sqlSelect);
 
         if (mysqli_num_rows($result) > 0) {
             while($row = mysqli_fetch_assoc($result)) {
-                $pVal = floatval($row["balance"]) + floatval($amount);
+                $balanceVal = floatval($row["balance"]) + floatval($amount);
             }
         } else {
-            $pVal = float($amount);
+            $balanceVal = float($amount);
         }
 
-        $sql2 = "UPDATE user_balance SET balance='".$pVal."', transaction_log='add ".$amount." balance to account', lastupdate='".date('Y-m-d H:i:s')."' WHERE user_id = '".$id."'";
-        if (mysqli_query($this->conn, $sql2)) {
-            $pVal = true;
-        }else{
-            $pVal = false;
+        $sqlUpdate = "UPDATE user_balance SET balance='".$balanceVal."', transaction_log='add ".$amount." balance to account', last_update='".date('Y-m-d H:i:s')."' WHERE user_id = '".$id."'";
+        $returnValue = true;
+        if (!mysqli_query($this->conn, $sqlUpdate)) {
+            $returnValue = false;
         }
 
         mysqli_close($this->conn);
 
-        return $pVal;
+        return $returnValue;
     }
 
     public function _removeBalance($id=null, $amount=null){
         $this->_DBConnect();
 
         if (!$this->conn) {
-            return "0.00";   
-        } 
+            return "0.00";
+        }
 
-        $sql1 = "SELECT balance FROM user_balance where user_id = '".$id."'";
-        $result = mysqli_query($this->conn, $sql1);
+        $sqlBalance = "SELECT balance FROM user_balance where user_id = '".$id."'";
+        $result = mysqli_query($this->conn, $sqlBalance);
 
         if (mysqli_num_rows($result) > 0) {
             while($row = mysqli_fetch_assoc($result)) {
-                $pVal = floatval($row["balance"]) - floatval($amount);
+                $balanceVal = floatval($row["balance"]) - floatval($amount);
             }
         } else {
-            $pVal = float($amount);
+            $balanceVal = float($amount);
         }
 
         $allowUpdate = true;
-        if($pVal < 0){
+        if($balanceVal < 0){
             $allowUpdate = false;
-            $sql3 = "SELECT overdraft FROM user where id = '".$id."'";
-            $result = mysqli_query($this->conn, $sql3);
+            $sqlOverdraft = "SELECT overdraft FROM user where id = '".$id."'";
+            $result = mysqli_query($this->conn, $sqlOverdraft);
             if (mysqli_num_rows($result) > 0) {
                 while($row = mysqli_fetch_assoc($result)) {
-                    $ovVal = $row["overdraft"];
+                    $overdraftVal = $row["overdraft"];
                 }
             } else {
-                $ovVal = 0;
+                $overdraftVal = 0;
             }
-            
-            if($ovVal == 1){
+
+            if($overdraftVal == 1){
                 $allowUpdate = true;
             }
         }
 
+        $returnValue = true;
         if($allowUpdate){
-            $sql2 = "UPDATE user_balance SET balance='".$pVal."', transaction_log='remove ".$amount." balance to account', lastupdate='".date('Y-m-d H:i:s')."' WHERE user_id = '".$id."'";
-            if (mysqli_query($this->conn, $sql2)) {
-                $pVal = true;
-            }else{
-                $pVal = false;
+            $sqlRemoveBalance = "UPDATE user_balance SET balance='".$balanceVal."', transaction_log='remove ".$amount." balance to account', last_update='".date('Y-m-d H:i:s')."' WHERE user_id = '".$id."'";
+            if (!mysqli_query($this->conn, $sqlRemoveBalance)) {
+                $returnValue = false;
             }
         }else{
-            $pVal = false;
+            $returnValue = false;
         }
 
         mysqli_close($this->conn);
 
-        return $pVal;
+        return $returnValue;
     }
 
     public function _overdraftAccount($id=null){
         $this->_DBConnect();
 
         if (!$this->conn) {
-            return false;   
-        } 
+            return false;
+        }
 
-        $sql = "UPDATE user SET overdraft='1' WHERE id = '".$id."'";
-        if (mysqli_query($this->conn, $sql)) {
-            $pVal = true;
-        }else{
-            $pVal = false;
+        $sqlUpdate = "UPDATE user SET overdraft='1' WHERE id = '".$id."'";
+        $returnValue = true;
+
+        if (!mysqli_query($this->conn, $sqlUpdate)) {
+          $returnValue = false;
         }
 
         mysqli_close($this->conn);
 
-        return $pVal;
-    }
-
-    public function _currencyList(){
-        return (array) $this->app['config']->currencyList;
-    }
-
-    public function _productList(){
-        return (array) $this->app['config']->productList;
+        return $returnValue;
     }
 }
