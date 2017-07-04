@@ -1,4 +1,4 @@
-# IMAN TEST
+# CLI APPLICATION
 
 
 ## Dependencies
